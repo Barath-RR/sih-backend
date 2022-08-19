@@ -34,7 +34,7 @@ class Courthouse(db.Model):
     courtType = db.Column(db.String, nullable=False)
     courtLocation = db.Column(db.String, nullable=False)
     users = db.relationship('User', backref='Courthouse')
-    fixedCaseDates = db.relationship('FixedCaseDate', backref='Courthouse')
+    # fixedCaseDates = db.relationship('FixedCaseDate', backref='Courthouse')
 
     def __repr__(self):
         return self.id + self.courtLocation
@@ -173,7 +173,7 @@ class Court(Resource):
         db.session.commit()
         return courthouse_schema.jsonify(court)
     
-class users(Resource):
+class user(Resource):
     def get(self):
         user=User.query.all()
         return users_schema.jsonify(user)
@@ -192,22 +192,22 @@ class users(Resource):
         return courthouse_schema.jsonify(user)
     
     def delete(self):
-       user=User.query.first()
+       user=User.query.all()
        db.seesion.delete(user)
        db.session.commit()
 
 class users(Resource):
     def get(self,userid):
-        user = User.query.filter_by(id=userid).first()
+        user = User.query.filter_by(id=userid).all()
         return users_schema.jsonify(user)
     
     def delete(self,userid):
-       user = User.query.filter_by(id=userid).first()
+       user = User.query.filter_by(id=userid).all()
        db.seesion.delete(user)
        db.session.commit()
     
     def put(self,userid):
-        user = User.query.filter_by(id=userid).first()
+        user = User.query.filter_by(id=userid).all()
         user.username=request.json['username']
         user.password =request.json['password']
         user.fullName=request.json['fullName']
@@ -220,16 +220,16 @@ class users(Resource):
 
 class cases(Resource):
     def get(self,caseno):
-        case = Case.query.filter_by(id=caseno).first()
+        case = Case.query.filter_by(id=caseno).all()
         return cases_schema.jsonify(case)
     
     def delete(self,caseno):
-       case = Case.query.filter_by(id=caseno).first()
+       case = Case.query.filter_by(id=caseno).all()
        db.seesion.delete(case)
        db.session.commit()
     
     def put(self,caseno):
-        case = Case.query.filter_by(id=caseno).first()
+        case = Case.query.filter_by(id=caseno).all()
         case.name=request.json['name']
         case.assignedAdvocate =request.json['assignedAdvocate']
         case.affidivit=request.json['affidivi']
@@ -243,7 +243,7 @@ class cases(Resource):
 class case(Resource):
     def get(self):
         case = Case.query.all()
-        return case_schema.jsonify(case)
+        return cases_schema.jsonify(case)
     
     def delete(self):
        case = Case.query.all()
@@ -252,13 +252,14 @@ class case(Resource):
     
     def post(self):
         name=request.json['name']
-        name.assignedAdvocate =request.json['assignedAdvocate']
-        name.affidivit=request.json['affidivi']
-        name.chargesheet=request.json['chargesheet']
-        name.casestatus =request.json['casestatus']
-        name.sevirity=request.json['sevirity']
-        name.assignedby=request.json['assignedby']
-        name.fixedCaseDates=request.json['fixedCaseDates']
+        assignedAdvocate =request.json['assignedAdvocate']
+        affidivit=request.json['affidavit']
+        chargesheet=request.json['chargeSheet']
+        casestatus =request.json['caseStatus']
+        sevirity=request.json['severityIndex']
+        assignedby=request.json['assignedBy']
+        case =Case(name=name,assignedAdvocate =assignedAdvocate, affidavit= affidivit,chargeSheet=chargesheet,caseStatus=casestatus,severityIndex=sevirity,assignedBy=assignedby)
+        db.session.add(case)
         db.session.commit()
         
 class requests(Resource):
@@ -278,17 +279,17 @@ class requests(Resource):
 
 class requestss(Resource):
     def get(self,reqid):
-        requests = Request.query.filter_by(id=reqid).first()
+        requests = Request.query.filter_by(id=reqid).all()
         return Request_schema.jsonify(requests)
 
     def delete(self,reqid):
-       requests = Request.query.filter_by(id=reqid).first()
+       requests = Request.query.filter_by(id=reqid).all()
        db.seesion.delete(requests)
        db.session.commit()
     
     
     def put(self,reqid):
-        requests = Request.query.filter_by(id=reqid).first()
+        requests = Request.query.filter_by(id=reqid).all()
         requests.fromUser=request.json['fromUser']
         requests.toUser =request.json['toUser']
         requests.requestType=request.json['requestType']
@@ -312,11 +313,11 @@ class fixeddates(Resource):
 
 class fixeddate(Resource):
     def get(self,fixid):
-        fixedcasedate = FixedCaseDate.filter_by(id=fixid).first()
+        fixedcasedate = FixedCaseDate.filter_by(id=fixid).all()
         return fixedcase_schema.jsonify(fixedcasedate)
     
     def put(self,fixid):
-        fixedcasedate = FixedCaseDate.filter_by(id=fixid).first()
+        fixedcasedate = FixedCaseDate.filter_by(id=fixid).all()
         fixedcasedate.case=request.json['case']
         fixedcasedate.date =request.json['date']
         fixedcasedate.createdBy=request.json['createdBy']
@@ -324,13 +325,20 @@ class fixeddate(Resource):
         db.session.commit()
     
     def delete(self,fixid):
-        fixedcasedate = FixedCaseDate.filter_by(id=fixid).first()
+        fixedcasedate = FixedCaseDate.filter_by(id=fixid).all()
         db.seesion.delete(fixedcasedate)
         db.session.commit()
         
 
 api.add_resource(Court,'/courthouse')
-       
+api.add_resource(user,'/user')
+api.add_resource(case,'/case')
+api.add_resource(cases,'/case/<int:caseno>')
+api.add_resource(requests,'/request')
+api.add_resource(requestss,'/request/<int:reqid>')
+api.add_resource(fixeddates,'/fixedcasedates')  
+api.add_resource(fixeddate,'/fixedcasedates/<int:fixid>')  
+
 #run Server
 if __name__=='__main__':
     app.run(debug=True)
